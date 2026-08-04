@@ -324,30 +324,25 @@ async function reserveGift(giftId, guestName) {
   if (name.length < 3 || name.length > 80) throw makeAppError("invalid-name");
 
   const lockRef = doc(db, "giftLocks", giftId);
-  const ownerRef = doc(db, "giftOwners", giftId);
   const userReservationRef = doc(db, "userReservations", user.uid);
 
   await runTransaction(db, async (transaction) => {
-    const [userReservation, giftLock, giftOwner] = await Promise.all([
+    // Solo se leen documentos cuya lectura permiten las reglas.
+    const [userReservation, giftLock] = await Promise.all([
       transaction.get(userReservationRef),
       transaction.get(lockRef),
-      transaction.get(ownerRef),
     ]);
 
     if (userReservation.exists()) throw makeAppError("session-already-has-gift");
-    if (giftLock.exists() || giftOwner.exists()) throw makeAppError("gift-already-reserved");
+    if (giftLock.exists()) throw makeAppError("gift-already-reserved");
 
     transaction.set(lockRef, {
       reserved: true,
+      ownerUid: user.uid,
       reservedAt: serverTimestamp(),
     });
 
-    transaction.set(ownerRef, {
-      ownerUid: user.uid,
-      guestName: name,
-      createdAt: serverTimestamp(),
-    });
-
+    // El nombre queda en el documento privado de la sesión.
     transaction.set(userReservationRef, {
       giftId,
       guestName: name,
@@ -366,19 +361,14 @@ async function cancelOwnGift() {
 
     const giftId = userReservation.data().giftId;
     const lockRef = doc(db, "giftLocks", giftId);
-    const ownerRef = doc(db, "giftOwners", giftId);
-    const [giftLock, giftOwner] = await Promise.all([
-      transaction.get(lockRef),
-      transaction.get(ownerRef),
-    ]);
+    const giftLock = await transaction.get(lockRef);
 
-    if (!giftOwner.exists() || giftOwner.data().ownerUid !== user.uid) {
+    if (!giftLock.exists()) throw makeAppError("reservation-incomplete");
+    if (giftLock.data().ownerUid !== user.uid) {
       throw makeAppError("not-reservation-owner");
     }
-    if (!giftLock.exists()) throw makeAppError("reservation-incomplete");
 
     transaction.delete(lockRef);
-    transaction.delete(ownerRef);
     transaction.delete(userReservationRef);
   });
 }
@@ -386,6 +376,11 @@ async function cancelOwnGift() {
 function setupGiftRegistry() {
   const grid = $("#giftGrid");
   const filters = $("#giftFilters");
+
+  // El grid completo puede ser más alto que la ventana. Si conserva la animación
+  // .reveal con threshold 0.12, nunca alcanza el porcentaje visible necesario.
+  // Lo mostramos desde el inicio para que aparezcan los 40 regalos sin filtrar.
+  grid?.classList.add("is-visible");
 
   filters?.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-gift-filter]");
@@ -748,6 +743,7 @@ function showFormStatus(message, type = null) {
 function getRsvpErrorMessage(error) {
   const code = String(error?.code || error?.message || "");
   if (code.includes("permission-denied")) return "Firestore rechazó el formulario. Publica las reglas nuevas.";
+  if (code.includes("auth/configuration-not-found")) return "Inicializa Firebase Authentication y activa el acceso anónimo.";
   if (code.includes("auth/operation-not-allowed")) return "Activa el inicio de sesión anónimo en Firebase Authentication.";
   if (code.includes("auth/unauthorized-domain")) return "Agrega el dominio de GitHub Pages a Authorized domains en Firebase Authentication.";
   if (code.includes("network") || code.includes("unavailable")) return "No hay conexión estable. Inténtalo nuevamente.";
@@ -756,23 +752,9 @@ function getRsvpErrorMessage(error) {
 
 function getFirebaseConnectionMessage(error) {
   const code = String(error?.code || error?.message || "");
-
-  if (code.includes("auth/configuration-not-found")) {
-    return "Firebase Authentication no está inicializado. Activa el acceso anónimo.";
-  }
-
-  if (code.includes("auth/operation-not-allowed")) {
-    return "Falta activar Authentication anónimo";
-  }
-
-  if (code.includes("auth/unauthorized-domain")) {
-    return "Dominio no autorizado en Firebase";
-  }
-
-  if (code.includes("permission-denied")) {
-    return "Falta publicar firestore.rules";
-  }
-
+  if (code.includes("auth/operation-not-allowed")) return "Falta activar Authentication anónimo";
+  if (code.includes("auth/unauthorized-domain")) return "Dominio no autorizado en Firebase";
+  if (code.includes("permission-denied")) return "Falta publicar firestore.rules";
   return "Firebase no está disponible";
 }
 
@@ -827,6 +809,7 @@ function getGiftErrorMessage(error) {
   if (code.includes("session-already-has-gift")) return "Esta sesión ya tiene un regalo. Bórralo primero para elegir otro.";
   if (code.includes("invalid-name")) return "Escribe tu nombre y apellido.";
   if (code.includes("permission-denied")) return "Firestore rechazó la operación. Publica las reglas nuevas.";
+  if (code.includes("auth/configuration-not-found")) return "Inicializa Firebase Authentication y activa el acceso anónimo.";
   if (code.includes("auth/operation-not-allowed")) return "Activa el acceso anónimo en Firebase Authentication.";
   if (code.includes("auth/unauthorized-domain")) return "Autoriza el dominio de GitHub Pages en Firebase Authentication.";
   if (code.includes("network") || code.includes("unavailable")) return "No hay conexión estable. Inténtalo nuevamente.";
