@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#20271f" />
+  <meta name="description" content="Invitación de boda de Yuriko y Anthony" />
+  <title>Yuriko & Anthony | Nuestra boda</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="is-locked">
+  <div class="noise" aria-hidden="true"></div>
+
+  <section class="intro" id="intro" aria-label="Abrir invitación">
+    <div class="intro__ornament intro__ornament--left"></div>
+    <div class="intro__ornament intro__ornament--right"></div>
+    <div class="intro__content">
+      <p class="eyebrow">Tenemos algo especial que contarte</p>
+      <div class="monogram" aria-hidden="true">
+        <span>Y</span><i>&</i><span>A</span>
+      </div>
+      <h1>Yuriko <em>&</em> Anthony</h1>
+      <p class="intro__copy">Hay momentos que solo tienen sentido cuando se comparten con las personas que queremos.</p>
+      <button class="button button--light" id="openInvitation" type="button">
+        <span>Abrir invitación</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <p class="intro__hint">Toca para ingresar</p>
+  </section>
+
+  <button class="music-button" id="musicButton" type="button" aria-label="Activar o pausar música" title="Música">
+    <span class="music-button__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
+
+  <a class="gift-shortcut" href="#regalos">Ver lista de regalos</a>
+
+  <main id="siteContent">
+    <section class="hero section" id="inicio">
+      <div class="hero__photo" role="img" aria-label="Fotografía de Yuriko y Anthony">
+        <div class="hero__photo-overlay"></div>
+        <div class="hero__placeholder">
+          <span>Reemplazar con</span>
+          <strong>foto principal</strong>
+          <small>assets/pareja-hero.jpg</small>
+        </div>
+      </div>
+      <div class="hero__content reveal">
+        <p class="eyebrow">Nos casamos</p>
+        <h2>Yuriko <span>&</span> Anthony</h2>
+        <div class="hero__date" id="heroDate">Fecha por confirmar</div>
+        <p class="hero__lead">Y queremos celebrar este nuevo capítulo contigo.</p>
+        <a class="text-link" href="#evento">Ver detalles <span>↓</span></a>
+      </div>
+    </section>
+
+    <section class="quote section section--paper">
+      <div class="botanical botanical--one" aria-hidden="true"></div>
+      <div class="quote__content reveal">
+        <span class="quote__mark">“</span>
+        <blockquote>Que todas las noches sean noches de boda. Que todas las lunas sean lunas de miel.</blockquote>
+        <p>— Joaquín Sabina</p>
+      </div>
+    </section>
+
+    <section class="countdown section section--green" id="cuenta-regresiva">
+      <div class="section-heading section-heading--center reveal">
+        <p class="eyebrow">Cada vez falta menos</p>
+        <h2>La cuenta regresiva comenzó</h2>
+      </div>
+      <div class="countdown__grid reveal" id="countdown">
+        <div><strong id="days">00</strong><span>Días</span></div>
+        <div><strong id="hours">00</strong><span>Horas</span></div>
+        <div><strong id="minutes">00</strong><span>Minutos</span></div>
+        <div><strong id="seconds">00</strong><span>Segundos</span></div>
+      </div>
+      <p class="countdown__message" id="countdownMessage">La fecha se actualizará desde el archivo <code>app.js</code>.</p>
+    </section>
+
+    <section class="story section section--paper" id="historia">
+      <div class="story__visual reveal">
+        <div class="story__photo story__photo--main"><span>Foto 01</span></div>
+        <div class="story__photo story__photo--small"><span>Foto 02</span></div>
+        <span class="story__year">Y · A</span>
+      </div>
+      <div class="story__copy reveal">
+        <p class="eyebrow">Nuestra historia</p>
+        <h2>Un sí que empezó mucho antes</h2>
+        <p>Entre conversaciones, aventuras, aprendizajes y muchas risas, entendimos que la vida se disfruta más cuando caminamos juntos.</p>
+        <p>Ahora queremos comenzar una nueva etapa y tenerte cerca para celebrarla.</p>
+      </div>
+    </section>
+
+    <section class="event section" id="evento">
+      <div class="section-heading section-heading--center reveal">
+        <p class="eyebrow">Agenda el día</p>
+        <h2>Detalles de la celebración</h2>
+      </div>
+
+      <div class="event__cards">
+        <article class="event-card reveal">
+          <div class="event-card__number">01</div>
+          <div class="event-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M8 39h32M12 39V20l12-9 12 9v19M19 39V27h10v12M17 21h14"/></svg>
+          </div>
+          <p class="eyebrow">Ceremonia</p>
+          <h3 id="ceremonyName">Lugar por confirmar</h3>
+          <p id="ceremonyTime">Hora por confirmar</p>
+          <p class="event-card__address" id="ceremonyAddress">Dirección por confirmar</p>
+          <a class="button button--outline button--small is-disabled" id="ceremonyMap" href="#" target="_blank" rel="noopener">Cómo llegar</a>
+        </article>
+
+        <article class="event-card event-card--dark reveal">
+          <div class="event-card__number">02</div>
+          <div class="event-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M24 8v32M15 13h18M12 39h24M17 19h14M19 25h10M21 31h6"/></svg>
+          </div>
+          <p class="eyebrow">Recepción</p>
+          <h3 id="receptionName">Lugar por confirmar</h3>
+          <p id="receptionTime">Hora por confirmar</p>
+          <p class="event-card__address" id="receptionAddress">Dirección por confirmar</p>
+          <a class="button button--light button--small is-disabled" id="receptionMap" href="#" target="_blank" rel="noopener">Cómo llegar</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="dress-code section section--sand">
+      <div class="dress-code__content reveal">
+        <p class="eyebrow">Código de vestimenta</p>
+        <h2>Elegante</h2>
+        <p>Queremos verte espectacular. Reserva el blanco, marfil y tonos similares para la novia.</p>
+        <div class="palette" aria-label="Paleta de colores sugeridos">
+          <span style="--swatch:#26332a"></span>
+          <span style="--swatch:#6f604d"></span>
+          <span style="--swatch:#9a8368"></span>
+          <span style="--swatch:#b8a78f"></span>
+          <span style="--swatch:#202020"></span>
+        </div>
+      </div>
+      <div class="dress-code__illustration reveal" aria-hidden="true">
+        <svg viewBox="0 0 420 420">
+          <path d="M142 330c12-58 25-113 40-164l-23-49 42-43 42 43-23 49c15 51 28 106 40 164z"/>
+          <path d="M268 330V160l-29-38 35-47 35 47-20 38v170M248 183h41M274 75v-17M297 81l15-14"/>
+          <circle cx="201" cy="48" r="21"/><circle cx="274" cy="48" r="21"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="gallery section section--paper" id="galeria">
+      <div class="section-heading reveal">
+        <p class="eyebrow">Nuestros recuerdos</p>
+        <h2>Un poquito de nosotros</h2>
+      </div>
+      <div class="gallery__grid reveal">
+        <figure class="gallery__item gallery__item--tall"><span>Foto vertical</span></figure>
+        <figure class="gallery__item"><span>Foto horizontal</span></figure>
+        <figure class="gallery__item"><span>Foto horizontal</span></figure>
+        <figure class="gallery__item gallery__item--wide"><span>Foto principal</span></figure>
+      </div>
+    </section>
+
+    <section class="gift-registry section section--green" id="regalos">
+      <div class="gift-registry__intro reveal">
+        <div class="gift-registry__icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M9 27h46v28H9zM6 18h52v10H6zM32 18v37M18 18c-8 0-9-12-1-12 7 0 15 12 15 12M46 18c8 0 9-12 1-12-7 0-15 12-15 12"/></svg>
+        </div>
+        <div class="gift-registry__copy">
+          <p class="eyebrow">El mejor regalo es tu presencia</p>
+          <h2>Lista de regalos</h2>
+          <p>Si deseas tener un detalle con nosotros, elige un regalo disponible y sepáralo con tu nombre.</p>
+        </div>
+      </div>
+
+      <div class="gift-registry__notice reveal">
+        <div>
+          <strong>Una selección por sesión</strong>
+          <span>Mientras mantengas esta sesión abierta podrás liberar tu regalo y elegir otro.</span>
+        </div>
+        <small id="giftConnectionStatus">Conectando con Firestore…</small>
+      </div>
+
+      <div class="gift-registry__toolbar reveal">
+        <div class="gift-filters" id="giftFilters" aria-label="Filtrar regalos"></div>
+        <p id="giftCount" aria-live="polite"></p>
+      </div>
+
+      <div class="gift-grid reveal" id="giftGrid" aria-live="polite" aria-busy="true">
+        <div class="gift-grid__loading">Cargando regalos…</div>
+      </div>
+
+      <aside class="my-gift reveal" id="myGiftReservation" hidden aria-live="polite">
+        <div class="my-gift__icon" aria-hidden="true">✓</div>
+        <div class="my-gift__copy">
+          <p class="eyebrow">Tu selección en esta sesión</p>
+          <h3 id="myGiftName">Regalo seleccionado</h3>
+          <p>Reserva registrada a nombre de <strong id="myGiftGuestName"></strong>.</p>
+        </div>
+        <button class="button button--light button--small" id="openCancelGift" type="button">Borrar selección</button>
+      </aside>
+    </section>
+
+    <section class="rsvp section section--paper" id="confirmar">
+      <div class="rsvp__intro reveal">
+        <p class="eyebrow">RSVP</p>
+        <h2>Confirma tu asistencia</h2>
+        <p>Busca tu invitación usando el código que recibiste. Así podremos mostrar el cupo asignado y registrar tu respuesta.</p>
+        <div class="rsvp__feature-list">
+          <span><i>✓</i> Invitaciones personalizadas</span>
+          <span><i>✓</i> Cupos controlados</span>
+          <span><i>✓</i> Respuesta en tiempo real</span>
+        </div>
+      </div>
+
+      <div class="rsvp-card reveal">
+        <form id="lookupForm" class="lookup-form">
+          <label for="guestCode">Código de invitación</label>
+          <div class="input-group">
+            <input id="guestCode" name="guestCode" type="text" autocomplete="off" placeholder="Ej. YAYA-001" maxlength="20" required />
+            <button class="button button--dark" type="submit">Buscar</button>
+          </div>
+          <p class="form-help">Demo disponible: <strong>YAYA-001</strong></p>
+        </form>
+
+        <div class="guest-result" id="guestResult" hidden>
+          <div class="guest-result__header">
+            <div>
+              <span>Invitación para</span>
+              <h3 id="guestName">Nombre del invitado</h3>
+            </div>
+            <div class="guest-result__seats"><strong id="guestSeats">2</strong><span>cupos</span></div>
+          </div>
+
+          <form id="rsvpForm" class="rsvp-form">
+            <input type="hidden" id="rsvpGuestCode" name="guestCode" />
+            <fieldset>
+              <legend>¿Podrás acompañarnos?</legend>
+              <div class="choice-grid">
+                <label class="choice"><input type="radio" name="attendance" value="yes" required /><span>¡Sí, ahí estaré!</span></label>
+                <label class="choice"><input type="radio" name="attendance" value="no" required /><span>No podré asistir</span></label>
+              </div>
+            </fieldset>
+
+            <label for="confirmedSeats">Personas que asistirán</label>
+            <select id="confirmedSeats" name="confirmedSeats"></select>
+
+            <label for="dietary">Restricciones alimentarias</label>
+            <input id="dietary" name="dietary" type="text" placeholder="Opcional" />
+
+            <label for="song">Una canción que no puede faltar</label>
+            <input id="song" name="song" type="text" placeholder="Artista — canción" />
+
+            <label for="message">Mensaje para los novios</label>
+            <textarea id="message" name="message" rows="4" placeholder="Escribe algo bonito..."></textarea>
+
+            <button class="button button--dark button--full" id="submitRsvp" type="submit">Confirmar respuesta</button>
+          </form>
+        </div>
+
+        <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="final section">
+      <div class="final__photo" aria-hidden="true"></div>
+      <div class="final__content reveal">
+        <p class="eyebrow">Gracias por ser parte</p>
+        <h2>Nos vemos en nuestro gran día</h2>
+        <div class="monogram monogram--small"><span>Y</span><i>&</i><span>A</span></div>
+        <p>Con cariño, Yuriko y Anthony</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="giftReservationModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="giftReservationTitle">
+    <div class="modal__backdrop" data-close-gift-modal></div>
+    <div class="modal__panel modal__panel--gift">
+      <button class="modal__close" type="button" data-close-gift-modal aria-label="Cerrar">×</button>
+
+      <div id="giftReservationContent">
+        <div class="modal-gift-preview" id="selectedGiftPreview" aria-hidden="true"></div>
+        <p class="eyebrow" id="selectedGiftCategory">Lista de regalos</p>
+        <h2 id="giftReservationTitle">Separar regalo</h2>
+        <p id="selectedGiftDescription">Confirma el regalo que deseas separar.</p>
+
+        <form class="gift-reservation-form" id="giftReservationForm">
+          <input id="selectedGiftId" name="giftId" type="hidden" />
+
+          <label for="giftGuestName">Tu nombre y apellido</label>
+          <input id="giftGuestName" name="guestName" type="text" autocomplete="name" minlength="3" maxlength="80" placeholder="Ej. Andrea Ramírez" required />
+
+          <p class="reservation-note">El nombre quedará asociado al regalo y no podrá editarse. Solo podrás borrar la selección completa durante esta sesión.</p>
+
+          <div class="modal-actions">
+            <button class="button button--outline" type="button" data-close-gift-modal>Cancelar</button>
+            <button class="button button--dark" id="reserveGiftButton" type="submit">Reservar regalo</button>
+          </div>
+          <p class="gift-reservation-status" id="giftReservationStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="gift-reservation-success" id="giftReservationSuccess" hidden>
+        <span class="gift-reservation-success__icon" aria-hidden="true">✓</span>
+        <p class="eyebrow">Reserva confirmada</p>
+        <h2>Gracias por el detalle</h2>
+        <p>El regalo quedó bloqueado para los demás. Tu selección aparecerá debajo de la lista mientras esta sesión siga abierta.</p>
+        <button class="button button--dark button--full" type="button" data-close-gift-modal>Volver a la lista</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="cancelGiftModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="cancelGiftTitle">
+    <div class="modal__backdrop" data-close-cancel-modal></div>
+    <div class="modal__panel modal__panel--confirm">
+      <button class="modal__close" type="button" data-close-cancel-modal aria-label="Cerrar">×</button>
+      <p class="eyebrow">Cambiar de regalo</p>
+      <h2 id="cancelGiftTitle">¿Borrar tu selección?</h2>
+      <p>Se liberará <strong id="cancelGiftName"></strong> para que otra persona pueda reservarlo.</p>
+      <div class="modal-actions">
+        <button class="button button--outline" type="button" data-close-cancel-modal>Conservar regalo</button>
+        <button class="button button--danger" id="confirmCancelGift" type="button">Sí, liberar</button>
+      </div>
+      <p class="gift-reservation-status" id="cancelGiftStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <audio id="backgroundMusic" loop preload="none">
+    <source src="assets/cancion-boda.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
