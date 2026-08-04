@@ -1,0 +1,12 @@
+Sube aquí imágenes WEBP con estos nombres:
+
+cafetera.webp
+freidora-aire.webp
+juego-copas.webp
+ropa-cama.webp
+aspiradora.webp
+maletas.webp
+cena-romantica.webp
+luna-miel.webp
+
+Mientras no existan, la web mostrará un placeholder automáticamente.
