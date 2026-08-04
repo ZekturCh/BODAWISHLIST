@@ -756,9 +756,23 @@ function getRsvpErrorMessage(error) {
 
 function getFirebaseConnectionMessage(error) {
   const code = String(error?.code || error?.message || "");
-  if (code.includes("auth/operation-not-allowed")) return "Falta activar Authentication anónimo";
-  if (code.includes("auth/unauthorized-domain")) return "Dominio no autorizado en Firebase";
-  if (code.includes("permission-denied")) return "Falta publicar firestore.rules";
+
+  if (code.includes("auth/configuration-not-found")) {
+    return "Firebase Authentication no está inicializado. Activa el acceso anónimo.";
+  }
+
+  if (code.includes("auth/operation-not-allowed")) {
+    return "Falta activar Authentication anónimo";
+  }
+
+  if (code.includes("auth/unauthorized-domain")) {
+    return "Dominio no autorizado en Firebase";
+  }
+
+  if (code.includes("permission-denied")) {
+    return "Falta publicar firestore.rules";
+  }
+
   return "Firebase no está disponible";
 }
 
