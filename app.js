@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/fireba
 import {
   browserSessionPersistence,
   getAuth,
-  onAuthStateChanged,
   setPersistence,
   signInAnonymously,
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
@@ -14,12 +13,14 @@ import {
   onSnapshot,
   runTransaction,
   serverTimestamp,
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 /* ==============================================================
    FIREBASE
-   La apiKey identifica el proyecto web; la seguridad real está en
-   Authentication + firestore.rules.
+   Esta configuración conecta la web con el proyecto dbdosparax.
+   La API key identifica el proyecto; la seguridad real depende de
+   Authentication y firestore.rules.
    ============================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyBiqqTAaogq4Pk1MaOUvr9YgXq2brqkzqU",
@@ -36,109 +37,98 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
-/* ==============================================================
-   DATOS DE LA BODA
-   ============================================================== */
 const WEDDING_CONFIG = {
-  weddingDate: null,
-  dateLabel: "Fecha por confirmar",
-  ceremony: {
-    name: "Lugar por confirmar",
-    time: "Hora por confirmar",
-    address: "Dirección por confirmar",
-    mapUrl: "",
-  },
-  reception: {
-    name: "Lugar por confirmar",
-    time: "Hora por confirmar",
-    address: "Dirección por confirmar",
-    mapUrl: "",
-  },
+  weddingDate: "2026-11-07T00:00:00-05:00",
+  dateLabel: "7 de noviembre de 2026",
+  address: "Av. Universitaria 6084, Los Olivos 15304",
 };
 
 /* ==============================================================
-   CATÁLOGO DE REGALOS
-   Las imágenes serán archivos locales de GitHub. Cuando aún no
-   existan, la tarjeta muestra un placeholder elegante.
+   CATÁLOGO COMPLETO: 40 REGALOS
+   Las imágenes deben existir dentro de assets/regalos/.
    ============================================================== */
 const GIFT_CATALOG = [
-  {
-    id: "cafetera",
-    name: "Cafetera",
-    description: "Para comenzar nuestras mañanas juntos con un buen café.",
-    category: "Cocina",
-    imageUrl: "assets/regalos/cafetera.webp",
-  },
-  {
-    id: "freidora-aire",
-    name: "Freidora de aire",
-    description: "Una ayuda práctica para preparar nuestras comidas favoritas.",
-    category: "Cocina",
-    imageUrl: "assets/regalos/freidora-aire.webp",
-  },
-  {
-    id: "juego-copas",
-    name: "Juego de copas",
-    description: "Para brindar por todos los momentos que están por venir.",
-    category: "Hogar",
-    imageUrl: "assets/regalos/juego-copas.webp",
-  },
-  {
-    id: "ropa-cama",
-    name: "Juego de ropa de cama",
-    description: "Para llenar nuestro nuevo hogar de comodidad.",
-    category: "Hogar",
-    imageUrl: "assets/regalos/ropa-cama.webp",
-  },
-  {
-    id: "aspiradora",
-    name: "Aspiradora",
-    description: "Para mantener nuestro espacio limpio y acogedor.",
-    category: "Hogar",
-    imageUrl: "assets/regalos/aspiradora.webp",
-  },
-  {
-    id: "maletas",
-    name: "Set de maletas",
-    description: "Para acompañarnos en nuestras próximas aventuras.",
-    category: "Viajes",
-    imageUrl: "assets/regalos/maletas.webp",
-  },
-  {
-    id: "cena-romantica",
-    name: "Cena para dos",
-    description: "Un detalle para crear un recuerdo especial como esposos.",
-    category: "Experiencias",
-    imageUrl: "assets/regalos/cena-romantica.webp",
-  },
-  {
-    id: "luna-miel",
-    name: "Experiencia de luna de miel",
-    description: "Una colaboración para nuestra primera aventura de casados.",
-    category: "Experiencias",
-    imageUrl: "assets/regalos/luna-miel.webp",
-  },
+  gift("set-platos-tendidos", "Set de platos tendidos", "Blanco", "Vajilla"),
+  gift("set-tazas", "Set de tazas", "Blanco", "Vajilla"),
+  gift("set-vasos", "Set de vasos", "Transparente", "Vajilla"),
+  gift("licuadora", "Licuadora", "Plateada", "Electrodomésticos"),
+  gift("sandwichera", "Sandwichera", "Plateada o negra", "Electrodomésticos"),
+  gift("waflera", "Waflera", "Plateada o negra", "Electrodomésticos"),
+  gift("termo", "Termo", "Negro o azul", "Cocina"),
+  gift("jarra-vidrio", "Jarra de vidrio", "Transparente", "Vajilla"),
+  gift("microondas", "Microondas", "Plateado o negro", "Electrodomésticos"),
+  gift("set-ollas", "Set de ollas", "Plateadas o negras", "Cocina"),
+  gift("olla-presion", "Olla a presión", "Plateada o negra", "Cocina"),
+  gift("set-cuchillos", "Set de cuchillos", "Plateado o negro", "Cocina"),
+  gift("set-cubiertos", "Set de tenedores y cucharas", "Plateado o negro", "Vajilla"),
+  gift("set-condimentos", "Set para condimentos", "Sin preferencia", "Cocina"),
+  gift("maquina-popcorn", "Máquina de pop corn", "Sin preferencia", "Electrodomésticos"),
+  gift("set-sartenes", "Set de sartenes", "Plateadas o negras", "Cocina"),
+  gift("set-limpieza", "Set de limpieza", "Sin preferencia", "Limpieza"),
+  gift("set-tinas-ropa", "Set de tinas para ropa", "Sin preferencia", "Limpieza"),
+  gift("olla-arrocera", "Olla arrocera", "Plateada o negra", "Electrodomésticos"),
+  gift("ventilador-pie", "Ventilador de pie", "Plateado, negro o blanco", "Electrodomésticos"),
+  gift("escurreplatos", "Escurreplatos de aluminio", "Plateado o negro", "Cocina"),
+  gift("verdulero", "Verdulero", "Plateado, negro o madera", "Organización"),
+  gift("set-platos-hondos", "Set de platos hondos", "Blanco", "Vajilla"),
+  gift("prensa-papas", "Prensa papas", "Plateada, negra o blanca", "Cocina"),
+  gift("pica-todo", "Pica todo", "Plateado, negro o blanco", "Cocina"),
+  gift("set-coladores", "Set de coladores de aluminio", "Plateado o negro", "Cocina"),
+  gift("plancha", "Plancha", "Plateada o negra", "Electrodomésticos"),
+  gift("tabla-planchar", "Tabla de planchar", "Plateada o negra", "Limpieza"),
+  gift("espejo-sala", "Espejo para sala", "Marco color madera", "Decoración"),
+  gift("freidora-aire", "Freidora de aire", "Plateada o negra", "Electrodomésticos"),
+  gift("utensilios-reposteria", "Utensilios de repostería de aluminio", "Plateado", "Cocina"),
+  gift("set-sabanas", "Set de sábanas", "Crema, rosado o blanco", "Dormitorio"),
+  gift("set-toallas", "Set de toallas", "Crema, rosado o blanco", "Dormitorio"),
+  gift("cafetera-electrica", "Cafetera eléctrica", "Plateada o negra", "Electrodomésticos"),
+  gift("tetera", "Tetera", "Plateada o negra", "Cocina"),
+  gift("cubre-cama", "Cubre cama", "Vintage, vino, crema o marrón", "Dormitorio"),
+  gift("aspiradora", "Aspiradora", "Plateada o negra", "Limpieza"),
+  gift("protector-colchon", "Protector de colchón", "Negro o plomo", "Dormitorio"),
+  gift("batidora-electrica", "Batidora eléctrica", "Negra o plateada", "Electrodomésticos"),
+  gift("set-copas", "Set de copas", "Transparente", "Vajilla"),
 ];
 
-const DEMO_GUESTS = {
-  "YAYA-001": { name: "Familia Invitada", seats: 2, status: "pending" },
-  "YAYA-002": { name: "Invitado de prueba", seats: 1, status: "pending" },
-};
+/*
+  Regalos ya separados según la hoja al 4 de agosto de 2026.
+  Los nombres NO se publican en la web. También están bloqueados
+  en las reglas para que nadie pueda reservarlos desde el cliente.
+*/
+const PRE_RESERVED_GIFT_IDS = new Set([
+  "set-platos-tendidos",
+  "set-tazas",
+  "set-vasos",
+  "microondas",
+  "freidora-aire",
+]);
+
+function gift(id, name, preferredColor, category) {
+  return {
+    id,
+    name,
+    preferredColor,
+    category,
+    description: `Color de preferencia: ${preferredColor}.`,
+    imageUrl: `assets/regalos/${id}.webp`,
+  };
+}
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
 const state = {
-  currentGuest: null,
   countdownTimer: null,
+  authPromise: null,
   sessionUser: null,
   firebaseReady: false,
-  locks: new Set(),
+  dynamicLocks: new Set(),
   ownReservation: null,
   giftFilter: "Todos",
   selectedGift: null,
   unsubscribeLocks: null,
   unsubscribeOwnReservation: null,
+  unsubscribeRsvp: null,
 };
 
 function setText(selector, value) {
@@ -146,7 +136,7 @@ function setText(selector, value) {
   if (element) element.textContent = value;
 }
 
-function cleanName(value) {
+function cleanText(value) {
   return String(value || "").trim().replace(/\s+/g, " ");
 }
 
@@ -156,38 +146,39 @@ function makeAppError(code, message = code) {
   return error;
 }
 
+function isGiftReserved(giftId) {
+  return PRE_RESERVED_GIFT_IDS.has(giftId) || state.dynamicLocks.has(giftId);
+}
+
+async function getSessionUser() {
+  if (state.sessionUser) return state.sessionUser;
+
+  if (!state.authPromise) {
+    state.authPromise = (async () => {
+      await setPersistence(auth, browserSessionPersistence);
+      if (auth.currentUser) return auth.currentUser;
+      const credential = await signInAnonymously(auth);
+      return credential.user;
+    })();
+  }
+
+  state.sessionUser = await state.authPromise;
+  return state.sessionUser;
+}
+
 /* ==============================================================
    INVITACIÓN GENERAL
    ============================================================== */
 function configureWeddingData() {
   setText("#heroDate", WEDDING_CONFIG.dateLabel);
-  setText("#ceremonyName", WEDDING_CONFIG.ceremony.name);
-  setText("#ceremonyTime", WEDDING_CONFIG.ceremony.time);
-  setText("#ceremonyAddress", WEDDING_CONFIG.ceremony.address);
-  configureMapLink("#ceremonyMap", WEDDING_CONFIG.ceremony.mapUrl);
-  setText("#receptionName", WEDDING_CONFIG.reception.name);
-  setText("#receptionTime", WEDDING_CONFIG.reception.time);
-  setText("#receptionAddress", WEDDING_CONFIG.reception.address);
-  configureMapLink("#receptionMap", WEDDING_CONFIG.reception.mapUrl);
-}
-
-function configureMapLink(selector, url) {
-  const link = $(selector);
-  if (!link) return;
-  link.href = url || "#";
-  link.classList.toggle("is-disabled", !url);
 }
 
 function startCountdown() {
-  const message = $("#countdownMessage");
-  if (!WEDDING_CONFIG.weddingDate) {
-    message.textContent = "La fecha se actualizará desde app.js.";
-    return;
-  }
-
   const target = new Date(WEDDING_CONFIG.weddingDate).getTime();
+  const message = $("#countdownMessage");
+
   if (Number.isNaN(target)) {
-    message.textContent = "La fecha configurada no tiene un formato válido.";
+    if (message) message.textContent = WEDDING_CONFIG.dateLabel;
     return;
   }
 
@@ -196,7 +187,7 @@ function startCountdown() {
     if (distance <= 0) {
       clearInterval(state.countdownTimer);
       ["#days", "#hours", "#minutes", "#seconds"].forEach((id) => setText(id, "00"));
-      message.textContent = "¡Hoy celebramos!";
+      if (message) message.textContent = "¡Hoy celebramos!";
       return;
     }
 
@@ -204,11 +195,12 @@ function startCountdown() {
     const hours = Math.floor((distance % 86_400_000) / 3_600_000);
     const minutes = Math.floor((distance % 3_600_000) / 60_000);
     const seconds = Math.floor((distance % 60_000) / 1_000);
+
     setText("#days", String(days).padStart(2, "0"));
     setText("#hours", String(hours).padStart(2, "0"));
     setText("#minutes", String(minutes).padStart(2, "0"));
     setText("#seconds", String(seconds).padStart(2, "0"));
-    message.textContent = WEDDING_CONFIG.dateLabel;
+    if (message) message.textContent = WEDDING_CONFIG.dateLabel;
   };
 
   update();
@@ -247,59 +239,37 @@ function setupMusic() {
 }
 
 function setupRevealAnimations() {
+  const revealElements = $$(".reveal");
+  if (!("IntersectionObserver" in window)) {
+    revealElements.forEach((element) => element.classList.add("is-visible"));
+    return;
+  }
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      }
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      observer.unobserve(entry.target);
     });
   }, { threshold: 0.12 });
-  $$(".reveal").forEach((item) => observer.observe(item));
+
+  revealElements.forEach((element) => observer.observe(element));
+}
+
+function setupAddressCopy() {
+  $("#copyAddress")?.addEventListener("click", async () => {
+    const status = $("#copyAddressStatus");
+    try {
+      await navigator.clipboard.writeText(WEDDING_CONFIG.address);
+      if (status) status.textContent = "Dirección copiada.";
+    } catch {
+      if (status) status.textContent = WEDDING_CONFIG.address;
+    }
+  });
 }
 
 /* ==============================================================
-   SESIÓN ANÓNIMA
-   browserSessionPersistence conserva el mismo usuario al recargar,
-   pero lo elimina al cerrar la pestaña/ventana.
-   ============================================================== */
-let sessionUserPromise = null;
-
-async function getSessionUser() {
-  if (state.sessionUser) return state.sessionUser;
-  if (sessionUserPromise) return sessionUserPromise;
-
-  sessionUserPromise = (async () => {
-    await setPersistence(auth, browserSessionPersistence);
-
-    const existingUser = await new Promise((resolve, reject) => {
-      let unsubscribe = () => {};
-      unsubscribe = onAuthStateChanged(
-        auth,
-        (user) => {
-          unsubscribe();
-          resolve(user);
-        },
-        (error) => {
-          unsubscribe();
-          reject(error);
-        }
-      );
-    });
-
-    state.sessionUser = existingUser || (await signInAnonymously(auth)).user;
-    return state.sessionUser;
-  })();
-
-  return sessionUserPromise;
-}
-
-/* ==============================================================
-   FIRESTORE · LISTA DE REGALOS
-
-   giftLocks/{giftId}           -> estado público reservado
-   giftOwners/{giftId}          -> nombre + UID, privado
-   userReservations/{uid}       -> una selección por sesión
+   FIRESTORE: LISTA DE REGALOS
    ============================================================== */
 async function connectGiftRegistry() {
   const status = $("#giftConnectionStatus");
@@ -311,13 +281,13 @@ async function connectGiftRegistry() {
     state.unsubscribeLocks = onSnapshot(
       collection(db, "giftLocks"),
       (snapshot) => {
-        state.locks = new Set(snapshot.docs.map((item) => item.id));
+        state.dynamicLocks = new Set(snapshot.docs.map((item) => item.id));
         state.firebaseReady = true;
-        status.textContent = "Lista actualizada en tiempo real";
+        if (status) status.textContent = "Lista actualizada en tiempo real";
         $("#giftGrid")?.setAttribute("aria-busy", "false");
         renderGiftRegistry();
       },
-      (error) => showGiftConnectionError(error)
+      showGiftConnectionError,
     );
 
     state.unsubscribeOwnReservation = onSnapshot(
@@ -329,7 +299,7 @@ async function connectGiftRegistry() {
         renderGiftRegistry();
         renderOwnReservation();
       },
-      (error) => showGiftConnectionError(error)
+      showGiftConnectionError,
     );
   } catch (error) {
     showGiftConnectionError(error);
@@ -340,14 +310,17 @@ function showGiftConnectionError(error) {
   console.error("Error de Firebase:", error);
   state.firebaseReady = false;
   const status = $("#giftConnectionStatus");
-  if (status) status.textContent = "Firebase no está disponible";
+  if (status) status.textContent = getFirebaseConnectionMessage(error);
   $("#giftGrid")?.setAttribute("aria-busy", "false");
   renderGiftRegistry();
 }
 
 async function reserveGift(giftId, guestName) {
+  if (PRE_RESERVED_GIFT_IDS.has(giftId)) throw makeAppError("gift-already-reserved");
+  if (!GIFT_CATALOG.some((giftItem) => giftItem.id === giftId)) throw makeAppError("invalid-gift");
+
   const user = await getSessionUser();
-  const name = cleanName(guestName);
+  const name = cleanText(guestName);
   if (name.length < 3 || name.length > 80) throw makeAppError("invalid-name");
 
   const lockRef = doc(db, "giftLocks", giftId);
@@ -394,7 +367,6 @@ async function cancelOwnGift() {
     const giftId = userReservation.data().giftId;
     const lockRef = doc(db, "giftLocks", giftId);
     const ownerRef = doc(db, "giftOwners", giftId);
-
     const [giftLock, giftOwner] = await Promise.all([
       transaction.get(lockRef),
       transaction.get(ownerRef),
@@ -403,7 +375,6 @@ async function cancelOwnGift() {
     if (!giftOwner.exists() || giftOwner.data().ownerUid !== user.uid) {
       throw makeAppError("not-reservation-owner");
     }
-
     if (!giftLock.exists()) throw makeAppError("reservation-incomplete");
 
     transaction.delete(lockRef);
@@ -412,9 +383,6 @@ async function cancelOwnGift() {
   });
 }
 
-/* ==============================================================
-   INTERFAZ DE REGALOS
-   ============================================================== */
 function setupGiftRegistry() {
   const grid = $("#giftGrid");
   const filters = $("#giftFilters");
@@ -443,7 +411,7 @@ function renderGiftFilters() {
   const container = $("#giftFilters");
   if (!container) return;
 
-  const categories = ["Todos", ...new Set(GIFT_CATALOG.map((gift) => gift.category))];
+  const categories = ["Todos", ...new Set(GIFT_CATALOG.map((giftItem) => giftItem.category))];
   container.replaceChildren();
 
   categories.forEach((category) => {
@@ -463,41 +431,42 @@ function renderGiftRegistry() {
   const count = $("#giftCount");
   if (!grid || !count) return;
 
-  const visibleGifts = GIFT_CATALOG.filter((gift) => (
-    state.giftFilter === "Todos" || gift.category === state.giftFilter
+  const visibleGifts = GIFT_CATALOG.filter((giftItem) => (
+    state.giftFilter === "Todos" || giftItem.category === state.giftFilter
   ));
-  const available = visibleGifts.filter((gift) => !state.locks.has(gift.id)).length;
+  const available = visibleGifts.filter((giftItem) => !isGiftReserved(giftItem.id)).length;
 
   count.textContent = `${available} ${available === 1 ? "disponible" : "disponibles"} de ${visibleGifts.length}`;
   grid.replaceChildren();
-  visibleGifts.forEach((gift) => grid.append(createGiftCard(gift)));
+  visibleGifts.forEach((giftItem) => grid.append(createGiftCard(giftItem)));
 }
 
-function createGiftCard(gift) {
-  const reserved = state.locks.has(gift.id);
-  const isOwn = state.ownReservation?.giftId === gift.id;
+function createGiftCard(giftItem) {
+  const reserved = isGiftReserved(giftItem.id);
+  const isOwn = state.ownReservation?.giftId === giftItem.id;
   const sessionAlreadySelected = Boolean(state.ownReservation);
+  const canReserve = state.firebaseReady && !reserved && !sessionAlreadySelected;
 
   const card = document.createElement("article");
   card.className = "gift-card";
   card.classList.toggle("is-reserved", reserved);
   card.classList.toggle("is-own", isOwn);
-  card.dataset.reserveGift = gift.id;
-  card.tabIndex = !reserved && !sessionAlreadySelected && state.firebaseReady ? 0 : -1;
+  card.dataset.reserveGift = giftItem.id;
+  card.tabIndex = canReserve ? 0 : -1;
   card.setAttribute("role", "button");
-  card.setAttribute("aria-disabled", String(reserved || sessionAlreadySelected || !state.firebaseReady));
+  card.setAttribute("aria-disabled", String(!canReserve));
   card.addEventListener("keydown", (event) => {
-    if ((event.key === "Enter" || event.key === " ") && card.tabIndex === 0) {
+    if ((event.key === "Enter" || event.key === " ") && canReserve) {
       event.preventDefault();
-      openGiftReservation(gift.id);
+      openGiftReservation(giftItem.id);
     }
   });
 
   const media = document.createElement("div");
   media.className = "gift-card__media";
   const image = document.createElement("img");
-  image.src = gift.imageUrl;
-  image.alt = gift.name;
+  image.src = giftItem.imageUrl;
+  image.alt = giftItem.name;
   image.loading = "lazy";
   image.addEventListener("error", () => {
     image.remove();
@@ -513,16 +482,16 @@ function createGiftCard(gift) {
   const body = document.createElement("div");
   body.className = "gift-card__body";
   body.innerHTML = `
-    <p class="gift-card__category">${escapeHtml(gift.category)}</p>
-    <h3>${escapeHtml(gift.name)}</h3>
-    <p class="gift-card__description">${escapeHtml(gift.description)}</p>
+    <p class="gift-card__category">${escapeHtml(giftItem.category)}</p>
+    <h3>${escapeHtml(giftItem.name)}</h3>
+    <p class="gift-card__description">${escapeHtml(giftItem.description)}</p>
   `;
 
   const button = document.createElement("button");
   button.type = "button";
   button.className = "button button--small gift-card__button";
-  button.dataset.reserveGift = gift.id;
-  button.disabled = reserved || sessionAlreadySelected || !state.firebaseReady;
+  button.dataset.reserveGift = giftItem.id;
+  button.disabled = !canReserve;
 
   if (!state.firebaseReady) button.textContent = "Conectando…";
   else if (isOwn) button.textContent = "Tu regalo reservado";
@@ -552,8 +521,8 @@ function renderOwnReservation() {
     return;
   }
 
-  const gift = GIFT_CATALOG.find((item) => item.id === state.ownReservation.giftId);
-  setText("#myGiftName", gift?.name || "Regalo seleccionado");
+  const giftItem = GIFT_CATALOG.find((item) => item.id === state.ownReservation.giftId);
+  setText("#myGiftName", giftItem?.name || "Regalo seleccionado");
   setText("#myGiftGuestName", state.ownReservation.guestName || "Invitado");
   panel.hidden = false;
 }
@@ -571,7 +540,7 @@ function setupGiftReservationModal() {
     event.preventDefault();
     if (!state.selectedGift) return;
 
-    const guestName = cleanName($("#giftGuestName")?.value);
+    const guestName = cleanText($("#giftGuestName")?.value);
     const button = $("#reserveGiftButton");
     button.disabled = true;
     button.textContent = "Reservando…";
@@ -592,22 +561,21 @@ function setupGiftReservationModal() {
 }
 
 function openGiftReservation(giftId) {
-  const gift = GIFT_CATALOG.find((item) => item.id === giftId);
-  if (!gift || !state.firebaseReady || state.locks.has(giftId) || state.ownReservation) return;
+  const giftItem = GIFT_CATALOG.find((item) => item.id === giftId);
+  if (!giftItem || !state.firebaseReady || isGiftReserved(giftId) || state.ownReservation) return;
 
-  state.selectedGift = gift;
-  setText("#selectedGiftCategory", gift.category);
-  setText("#giftReservationTitle", gift.name);
-  setText("#selectedGiftDescription", gift.description);
-  $("#selectedGiftId").value = gift.id;
+  state.selectedGift = giftItem;
+  setText("#selectedGiftCategory", giftItem.category);
+  setText("#giftReservationTitle", giftItem.name);
+  setText("#selectedGiftDescription", giftItem.description);
   $("#giftReservationForm").reset();
-  $("#selectedGiftId").value = gift.id;
+  $("#selectedGiftId").value = giftItem.id;
   $("#giftReservationContent").hidden = false;
   $("#giftReservationSuccess").hidden = true;
   showGiftReservationStatus("");
 
   const preview = $("#selectedGiftPreview");
-  preview.style.backgroundImage = `linear-gradient(rgba(20, 25, 20, .08), rgba(20, 25, 20, .08)), url("${gift.imageUrl}")`;
+  preview.style.backgroundImage = `linear-gradient(rgba(20,25,20,.08), rgba(20,25,20,.08)), url("${giftItem.imageUrl}")`;
 
   openModal($("#giftReservationModal"));
   window.setTimeout(() => $("#giftGuestName")?.focus(), 80);
@@ -620,8 +588,8 @@ function closeGiftReservation() {
 
 function openCancelGiftModal() {
   if (!state.ownReservation) return;
-  const gift = GIFT_CATALOG.find((item) => item.id === state.ownReservation.giftId);
-  setText("#cancelGiftName", gift?.name || "tu regalo");
+  const giftItem = GIFT_CATALOG.find((item) => item.id === state.ownReservation.giftId);
+  setText("#cancelGiftName", giftItem?.name || "tu regalo");
   showCancelStatus("");
   openModal($("#cancelGiftModal"));
 }
@@ -654,6 +622,149 @@ function setupCancelGiftModal() {
   });
 }
 
+/* ==============================================================
+   FIRESTORE: FORMULARIO RSVP SIN CÓDIGO
+   Un documento por sesión anónima: rsvps/{uid}
+   ============================================================== */
+async function connectRsvp() {
+  const connection = $("#rsvpConnectionStatus");
+
+  try {
+    const user = await getSessionUser();
+    const rsvpRef = doc(db, "rsvps", user.uid);
+
+    state.unsubscribeRsvp = onSnapshot(
+      rsvpRef,
+      (snapshot) => {
+        if (connection) connection.textContent = "Conectado a Firestore";
+        if (snapshot.exists()) fillRsvpForm(snapshot.data());
+      },
+      (error) => {
+        console.error("Error RSVP:", error);
+        if (connection) connection.textContent = getFirebaseConnectionMessage(error);
+      },
+    );
+  } catch (error) {
+    console.error("Error RSVP:", error);
+    if (connection) connection.textContent = getFirebaseConnectionMessage(error);
+  }
+}
+
+function setupRsvpForm() {
+  const form = $("#rsvpForm");
+  if (!form) return;
+
+  form.addEventListener("change", (event) => {
+    if (event.target.name !== "attendance") return;
+    const guestCount = $("#guestCount");
+    const attends = event.target.value === "yes";
+    guestCount.disabled = !attends;
+    guestCount.required = attends;
+    if (!attends) guestCount.value = "1";
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const fullName = cleanText(data.get("fullName"));
+    const phone = cleanText(data.get("phone"));
+    const attendance = data.get("attendance");
+    const guestCount = attendance === "yes" ? Number(data.get("guestCount")) : 0;
+
+    if (fullName.length < 3) {
+      showFormStatus("Escribe tu nombre y apellido.", "error");
+      return;
+    }
+    if (phone.length < 6) {
+      showFormStatus("Escribe un celular o WhatsApp válido.", "error");
+      return;
+    }
+    if (!attendance) {
+      showFormStatus("Indica si podrás asistir.", "error");
+      return;
+    }
+
+    const button = $("#submitRsvp");
+    button.disabled = true;
+    button.textContent = "Guardando…";
+    showFormStatus("");
+
+    try {
+      const user = await getSessionUser();
+      const rsvpRef = doc(db, "rsvps", user.uid);
+      const existing = await getDoc(rsvpRef);
+
+      const payload = {
+        ownerUid: user.uid,
+        fullName,
+        phone,
+        attendance,
+        guestCount,
+        dietary: cleanText(data.get("dietary")),
+        message: cleanText(data.get("message")),
+        updatedAt: serverTimestamp(),
+      };
+
+      if (!existing.exists()) payload.createdAt = serverTimestamp();
+      await setDoc(rsvpRef, payload, { merge: true });
+      showFormStatus("¡Confirmación guardada correctamente!", "success");
+    } catch (error) {
+      console.error(error);
+      showFormStatus(getRsvpErrorMessage(error), "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Guardar confirmación";
+    }
+  });
+
+  connectRsvp();
+}
+
+function fillRsvpForm(data) {
+  if (data.fullName) $("#rsvpName").value = data.fullName;
+  if (data.phone) $("#rsvpPhone").value = data.phone;
+  if (data.dietary) $("#dietary").value = data.dietary;
+  if (data.message) $("#message").value = data.message;
+  if (data.guestCount) $("#guestCount").value = String(data.guestCount);
+
+  const attendance = data.attendance;
+  if (attendance === "yes" || attendance === "no") {
+    const radio = $(`input[name="attendance"][value="${attendance}"]`);
+    if (radio) radio.checked = true;
+    const guestCount = $("#guestCount");
+    guestCount.disabled = attendance === "no";
+    guestCount.required = attendance === "yes";
+  }
+}
+
+function showFormStatus(message, type = null) {
+  const status = $("#formStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.className = "form-status";
+  if (type) status.classList.add(`is-${type}`);
+}
+
+function getRsvpErrorMessage(error) {
+  const code = String(error?.code || error?.message || "");
+  if (code.includes("permission-denied")) return "Firestore rechazó el formulario. Publica las reglas nuevas.";
+  if (code.includes("auth/operation-not-allowed")) return "Activa el inicio de sesión anónimo en Firebase Authentication.";
+  if (code.includes("auth/unauthorized-domain")) return "Agrega el dominio de GitHub Pages a Authorized domains en Firebase Authentication.";
+  if (code.includes("network") || code.includes("unavailable")) return "No hay conexión estable. Inténtalo nuevamente.";
+  return "No se pudo guardar la confirmación. Revisa la configuración de Firebase.";
+}
+
+function getFirebaseConnectionMessage(error) {
+  const code = String(error?.code || error?.message || "");
+  if (code.includes("auth/operation-not-allowed")) return "Falta activar Authentication anónimo";
+  if (code.includes("auth/unauthorized-domain")) return "Dominio no autorizado en Firebase";
+  if (code.includes("permission-denied")) return "Falta publicar firestore.rules";
+  return "Firebase no está disponible";
+}
+
+/* ==============================================================
+   MODALES Y MENSAJES
+   ============================================================== */
 function openModal(modal) {
   if (!modal) return;
   modal.classList.add("is-open");
@@ -680,6 +791,7 @@ function setupModalKeyboard() {
 
 function showGiftReservationStatus(message, type = null) {
   const status = $("#giftReservationStatus");
+  if (!status) return;
   status.textContent = message;
   status.className = "gift-reservation-status";
   if (type) status.classList.add(`is-${type}`);
@@ -687,6 +799,7 @@ function showGiftReservationStatus(message, type = null) {
 
 function showCancelStatus(message, type = null) {
   const status = $("#cancelGiftStatus");
+  if (!status) return;
   status.textContent = message;
   status.className = "gift-reservation-status";
   if (type) status.classList.add(`is-${type}`);
@@ -697,12 +810,11 @@ function getGiftErrorMessage(error) {
   if (code.includes("gift-already-reserved") || code.includes("already-exists") || code.includes("aborted")) {
     return "Otra persona reservó este regalo antes. Elige otro disponible.";
   }
-  if (code.includes("session-already-has-gift")) {
-    return "Esta sesión ya tiene un regalo. Bórralo desde el bloque inferior antes de elegir otro.";
-  }
+  if (code.includes("session-already-has-gift")) return "Esta sesión ya tiene un regalo. Bórralo primero para elegir otro.";
   if (code.includes("invalid-name")) return "Escribe tu nombre y apellido.";
-  if (code.includes("permission-denied")) return "Firestore rechazó la operación. Publica el archivo firestore.rules incluido.";
+  if (code.includes("permission-denied")) return "Firestore rechazó la operación. Publica las reglas nuevas.";
   if (code.includes("auth/operation-not-allowed")) return "Activa el acceso anónimo en Firebase Authentication.";
+  if (code.includes("auth/unauthorized-domain")) return "Autoriza el dominio de GitHub Pages en Firebase Authentication.";
   if (code.includes("network") || code.includes("unavailable")) return "No hay conexión estable. Inténtalo nuevamente.";
   if (code.includes("reservation-not-found")) return "Esta reserva ya no existe.";
   return "No se pudo completar la operación. Inténtalo nuevamente.";
@@ -717,131 +829,23 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-/* ==============================================================
-   RSVP TEMPORAL
-   ============================================================== */
-function normalizeGuestCode(code) {
-  return String(code || "").trim().toUpperCase().replace(/\s+/g, "");
-}
-
-async function getGuestByCode(code) {
-  await new Promise((resolve) => window.setTimeout(resolve, 250));
-  return DEMO_GUESTS[code] ?? null;
-}
-
-async function saveRsvp(payload) {
-  localStorage.setItem(`wedding-rsvp-${payload.guestCode}`, JSON.stringify(payload));
-  await new Promise((resolve) => window.setTimeout(resolve, 250));
-}
-
-function setupGuestLookup() {
-  const form = $("#lookupForm");
-  const result = $("#guestResult");
-  if (!form || !result) return;
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const code = normalizeGuestCode($("#guestCode").value);
-    const submit = form.querySelector('button[type="submit"]');
-    submit.disabled = true;
-    submit.textContent = "Buscando…";
-    showFormStatus("");
-
-    try {
-      const guest = await getGuestByCode(code);
-      if (!guest) {
-        state.currentGuest = null;
-        result.hidden = true;
-        showFormStatus("No encontramos ese código.", "error");
-        return;
-      }
-      state.currentGuest = { code, ...guest };
-      renderGuest(state.currentGuest);
-      result.hidden = false;
-    } finally {
-      submit.disabled = false;
-      submit.textContent = "Buscar";
-    }
-  });
-}
-
-function renderGuest(guest) {
-  setText("#guestName", guest.name);
-  setText("#guestSeats", guest.seats);
-  $("#rsvpGuestCode").value = guest.code;
-  const select = $("#confirmedSeats");
-  select.replaceChildren();
-  for (let seats = 1; seats <= guest.seats; seats += 1) {
-    const option = document.createElement("option");
-    option.value = String(seats);
-    option.textContent = `${seats} ${seats === 1 ? "persona" : "personas"}`;
-    select.append(option);
-  }
-}
-
-function setupRsvpForm() {
-  const form = $("#rsvpForm");
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!state.currentGuest) return;
-    const data = new FormData(form);
-    const payload = {
-      guestCode: state.currentGuest.code,
-      guestName: state.currentGuest.name,
-      attendance: data.get("attendance"),
-      confirmedSeats: data.get("attendance") === "yes" ? Number(data.get("confirmedSeats")) : 0,
-      dietary: cleanName(data.get("dietary")),
-      song: cleanName(data.get("song")),
-      message: cleanName(data.get("message")),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const button = $("#submitRsvp");
-    button.disabled = true;
-    button.textContent = "Guardando…";
-    try {
-      await saveRsvp(payload);
-      showFormStatus("¡Respuesta registrada! Gracias por confirmar.", "success");
-      form.reset();
-    } catch {
-      showFormStatus("No se pudo guardar la respuesta.", "error");
-    } finally {
-      button.disabled = false;
-      button.textContent = "Confirmar respuesta";
-    }
-  });
-}
-
-function showFormStatus(message, type = null) {
-  const status = $("#formStatus");
-  if (!status) return;
-  status.textContent = message;
-  status.className = "form-status";
-  if (type) status.classList.add(`is-${type}`);
-}
-
-function loadGuestCodeFromUrl() {
-  const code = new URLSearchParams(window.location.search).get("code");
-  if (code && $("#guestCode")) $("#guestCode").value = normalizeGuestCode(code);
-}
-
 function initialize() {
   configureWeddingData();
   startCountdown();
   setupIntro();
   setupMusic();
   setupRevealAnimations();
+  setupAddressCopy();
   setupGiftRegistry();
   setupGiftReservationModal();
   setupCancelGiftModal();
   setupModalKeyboard();
-  setupGuestLookup();
   setupRsvpForm();
-  loadGuestCodeFromUrl();
 }
 
 document.addEventListener("DOMContentLoaded", initialize);
 window.addEventListener("beforeunload", () => {
   state.unsubscribeLocks?.();
   state.unsubscribeOwnReservation?.();
+  state.unsubscribeRsvp?.();
 });
