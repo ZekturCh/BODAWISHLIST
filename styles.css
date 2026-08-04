@@ -423,3 +423,76 @@ body.modal-open { overflow: hidden; }
   .modal-actions { grid-template-columns: 1fr; }
   .modal-gift-preview { min-height: 150px; }
 }
+
+/* ==============================================================
+   ACTUALIZACIÓN: UBICACIÓN + RSVP FIRESTORE
+   ============================================================== */
+.venue-card {
+  width: min(1160px, 100%);
+  margin: 54px auto 0;
+  display: grid;
+  grid-template-columns: minmax(300px, .85fr) minmax(420px, 1.35fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.venue-card__copy {
+  padding: clamp(38px, 6vw, 78px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.venue-card__copy h3 {
+  margin: 7px 0 22px;
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 5vw, 5.1rem);
+  font-weight: 400;
+  line-height: .96;
+}
+
+.venue-card__date {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--forest);
+}
+
+.venue-card__time,
+.venue-card__address {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.venue-card__copy .button { margin-top: 28px; }
+.copy-status { min-height: 22px; margin: 10px 0 0; color: var(--forest); font-size: .78rem; }
+
+.venue-card__map { min-height: 520px; background: var(--sand); }
+.venue-card__map iframe { width: 100%; height: 100%; min-height: 520px; border: 0; display: block; }
+
+.rsvp-connection {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: .74rem;
+}
+
+.rsvp-form select:disabled { opacity: .55; cursor: not-allowed; }
+
+.gift-card__description { min-height: 42px; }
+
+@media (max-width: 900px) {
+  .venue-card { grid-template-columns: 1fr; }
+  .venue-card__map,
+  .venue-card__map iframe { min-height: 420px; }
+}
+
+@media (max-width: 620px) {
+  .venue-card__copy { padding: 42px 24px; }
+  .venue-card__map,
+  .venue-card__map iframe { min-height: 340px; }
+}
